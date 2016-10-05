@@ -21,44 +21,32 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
-import com.squareup.leakcanary.internal.DisplayLeakActivity;
 import com.squareup.leakcanary.internal.HeapAnalyzerService;
+import com.squareup.leakcanary.internal.LeakCanaryInternals;
 
 import static android.text.format.Formatter.formatShortFileSize;
 import static com.squareup.leakcanary.BuildConfig.GIT_SHA;
 import static com.squareup.leakcanary.BuildConfig.LIBRARY_VERSION;
 import static com.squareup.leakcanary.internal.LeakCanaryInternals.isInServiceProcess;
-import static com.squareup.leakcanary.internal.LeakCanaryInternals.setEnabled;
 
 public final class LeakCanary {
 
+  private static volatile Boolean isInAnalyzerProcess = LeakCanaryInternals.UNKNOWN;
+
   /**
-   * Creates a {@link RefWatcher} that works out of the box, and starts watching activity
-   * references (on ICS+).
+   * Creates a {@link RefWatcher} that works out of the box.
    */
   public static RefWatcher install(Application application) {
-    return refWatcher(application).listenerServiceClass(DisplayLeakService.class)
-        .excludedRefs(AndroidExcludedRefs.createAppDefaults().build())
+    ExcludedRefs excludedRefs = AndroidExcludedRefs.createAppDefaults().build();
+    return refWatcher(application) //
+        .listenerServiceClass(DisplayLeakService.class) //
+        .excludedRefs(excludedRefs) //
         .buildAndInstall();
   }
 
   /** Builder to create a customized {@link RefWatcher} with appropriate Android defaults. */
   public static AndroidRefWatcherBuilder refWatcher(Context context) {
     return new AndroidRefWatcherBuilder(context);
-  }
-
-  public static void enableDisplayLeakActivity(Context context) {
-    setEnabled(context, DisplayLeakActivity.class, true);
-  }
-
-  /**
-   * If you build a {@link RefWatcher} with a {@link AndroidHeapDumper} that has a custom {@link
-   * LeakDirectoryProvider}, then you should also call this method to make sure the activity in
-   * charge of displaying leaks can find those on the file system.
-   */
-  public static void setDisplayLeakActivityDirectoryProvider(
-      LeakDirectoryProvider leakDirectoryProvider) {
-    DisplayLeakActivity.setLeakDirectoryProvider(leakDirectoryProvider);
   }
 
   /** Returns a string representation of the result of a heap analysis. */
@@ -133,7 +121,6 @@ public final class LeakCanary {
         + "ms"
         + "\n"
         + detailedString;
-
     return info;
   }
 
@@ -142,7 +129,11 @@ public final class LeakCanary {
    * a different process than the normal app process.
    */
   public static boolean isInAnalyzerProcess(Context context) {
-    return isInServiceProcess(context, HeapAnalyzerService.class);
+    if (isInAnalyzerProcess != LeakCanaryInternals.UNKNOWN) {
+      return isInAnalyzerProcess;
+    }
+    isInAnalyzerProcess = isInServiceProcess(context, HeapAnalyzerService.class);
+    return isInAnalyzerProcess;
   }
 
   private LeakCanary() {

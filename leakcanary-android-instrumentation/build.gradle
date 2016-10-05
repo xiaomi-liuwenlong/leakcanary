@@ -1,0 +1,42 @@
+version rootProject.ext.VERSION_NAME
+group rootProject.ext.GROUP
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+apply plugin: 'com.android.library'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile project(':leakcanary-android')
+  compile 'junit:junit:4.12'
+  compile 'com.android.support.test:runner:0.4'
+}
+
+android {
+  resourcePrefix 'leak_canary_'
+  compileSdkVersion rootProject.ext.compileSdkVersion
+  buildToolsVersion rootProject.ext.buildToolsVersion
+  defaultConfig {
+    minSdkVersion rootProject.ext.minSdkVersion
+    targetSdkVersion rootProject.ext.targetSdkVersion
+    consumerProguardFiles 'consumer-proguard-rules.pro'
+  }
+  lintOptions {
+    disable 'GoogleAppIndexingWarning'
+    ignore 'InvalidPackage'
+  }
+}
+
+task sourceJar(type: Jar) {
+  from 'src/main/java'
+}
+
+apply from: rootProject.file('gradle/checkstyle.gradle')
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

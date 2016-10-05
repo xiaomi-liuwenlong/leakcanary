@@ -24,7 +24,8 @@ import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH;
 import static com.squareup.leakcanary.Preconditions.checkNotNull;
 
-@TargetApi(ICE_CREAM_SANDWICH) public final class ActivityRefWatcher {
+@TargetApi(ICE_CREAM_SANDWICH) //
+public final class ActivityRefWatcher {
 
   public static void installOnIcsPlus(Application application, RefWatcher refWatcher) {
     if (SDK_INT < ICE_CREAM_SANDWICH) {

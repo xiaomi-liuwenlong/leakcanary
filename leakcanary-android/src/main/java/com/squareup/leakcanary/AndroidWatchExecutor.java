@@ -24,8 +24,7 @@ import static com.squareup.leakcanary.Retryable.Result.RETRY;
 
 /**
  * {@link WatchExecutor} suitable for watching Android reference leaks. This executor waits for the
- * main thread to be idle then posts to a serial background thread with a delay of
- * {@link R.integer#leak_canary_watch_delay_millis} seconds.
+ * main thread to be idle then posts with a delay to a serial background thread.
  */
 public final class AndroidWatchExecutor implements WatchExecutor {
 

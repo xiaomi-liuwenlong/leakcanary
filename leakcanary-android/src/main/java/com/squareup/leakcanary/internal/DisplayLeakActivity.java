@@ -42,7 +42,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import com.squareup.leakcanary.AnalysisResult;
 import com.squareup.leakcanary.CanaryLog;
-import com.squareup.leakcanary.DefaultLeakDirectoryProvider;
 import com.squareup.leakcanary.HeapDump;
 import com.squareup.leakcanary.LeakDirectoryProvider;
 import com.squareup.leakcanary.R;
@@ -68,34 +67,17 @@ import static com.squareup.leakcanary.BuildConfig.LIBRARY_VERSION;
 import static com.squareup.leakcanary.LeakCanary.leakInfo;
 import static com.squareup.leakcanary.internal.LeakCanaryInternals.newSingleThreadExecutor;
 
-@SuppressWarnings("ConstantConditions") @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+@SuppressWarnings("ConstantConditions") //
+@TargetApi(Build.VERSION_CODES.HONEYCOMB) //
 public final class DisplayLeakActivity extends Activity {
 
-  private static LeakDirectoryProvider leakDirectoryProvider = null;
-
   private static final String SHOW_LEAK_EXTRA = "show_latest";
-
-  public static PendingIntent createPendingIntent(Context context) {
-    return createPendingIntent(context, null);
-  }
 
   public static PendingIntent createPendingIntent(Context context, String referenceKey) {
     Intent intent = new Intent(context, DisplayLeakActivity.class);
     intent.putExtra(SHOW_LEAK_EXTRA, referenceKey);
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     return PendingIntent.getActivity(context, 1, intent, FLAG_UPDATE_CURRENT);
-  }
-
-  public static void setLeakDirectoryProvider(LeakDirectoryProvider leakDirectoryProvider) {
-    DisplayLeakActivity.leakDirectoryProvider = leakDirectoryProvider;
-  }
-
-  private static LeakDirectoryProvider leakDirectoryProvider(Context context) {
-    LeakDirectoryProvider leakDirectoryProvider = DisplayLeakActivity.leakDirectoryProvider;
-    if (leakDirectoryProvider == null) {
-      leakDirectoryProvider = new DefaultLeakDirectoryProvider(context);
-    }
-    return leakDirectoryProvider;
   }
 
   // null until it's been first loaded.
@@ -142,7 +124,7 @@ public final class DisplayLeakActivity extends Activity {
 
   @Override protected void onResume() {
     super.onResume();
-    LoadLeaks.load(this, leakDirectoryProvider(this));
+    LoadLeaks.load(this, LeakCanaryInternals.leakDirectoryProvider);
   }
 
   @Override public void setTheme(int resid) {
@@ -238,7 +220,7 @@ public final class DisplayLeakActivity extends Activity {
   }
 
   void deleteAllLeaks() {
-    leakDirectoryProvider(DisplayLeakActivity.this).clearLeakDirectory();
+    LeakCanaryInternals.leakDirectoryProvider.clearLeakDirectory();
     leaks = Collections.emptyList();
     updateUi();
   }
